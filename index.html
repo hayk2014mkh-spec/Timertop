@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="hy" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Աշխարհի Ժամացույց | World Clock</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Outfit for luxury numbers -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Flag Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css"/>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Outfit', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth theme transitions */
+        *, *::before, *::after {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel-dark {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-light {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        /* Custom flag icon styling */
+        .flag-icon-custom {
+            width: 2.75rem;
+            height: 2.0rem;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .flag-icon-custom {
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Ambient Glow Background Animation */
+        @keyframes float-slow {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            50% { transform: translate(30px, -20px) scale(1.08); }
+        }
+        @keyframes float-reverse {
+            0%, 100% { transform: translate(0px, 0px) scale(1); }
+            50% { transform: translate(-30px, 20px) scale(1.05); }
+        }
+
+        .animate-blob-1 {
+            animation: float-slow 14s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+            animation: float-reverse 18s infinite ease-in-out;
+        }
+
+        /* Scrollbar aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col relative overflow-x-hidden antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- Ambient Glowing Orbs Background -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-sky-400/20 dark:bg-sky-600/15 rounded-full blur-[120px] animate-blob-1"></div>
+        <div class="absolute top-1/3 -right-32 w-[30rem] h-[30rem] bg-indigo-400/20 dark:bg-indigo-600/15 rounded-full blur-[140px] animate-blob-2"></div>
+        <div class="absolute -bottom-32 left-1/4 w-96 h-96 bg-purple-400/15 dark:bg-purple-600/10 rounded-full blur-[120px] animate-blob-1"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+
+        <!-- Navbar -->
+        <header class="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-sky-500/25 ring-2 ring-white/20">
+                        <i class="fa-solid fa-earth-americas text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 dark:from-sky-400 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent">
+                            Աշխարհի Ժամացույց
+                        </h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Իրական ժամանակի ինտերակտիվ համակարգ</p>
+                    </div>
+                </div>
+
+                <!-- Right Controls: Status & Theme Toggle -->
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <!-- Live Pulse Badge -->
+                    <div class="hidden sm:flex items-center space-x-2 space-x-reverse bg-slate-100 dark:bg-slate-800/80 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-slate-700/60 shadow-sm">
+                        <span class="relative flex h-2.5 w-2.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Ուղիղ միացում</span>
+                    </div>
+
+                    <!-- Theme Toggle Button -->
+                    <button 
+                        id="theme-toggle"
+                        aria-label="Փոխել թեման"
+                        class="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm hover:scale-105 active:scale-95 transition-transform"
+                    >
+                        <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+            <!-- Hero Local Time Banner -->
+            <section class="relative overflow-hidden rounded-3xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-10 shadow-xl backdrop-blur-xl">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                    
+                    <div class="space-y-3 text-center md:text-left">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span>Ձեր Տեղական Ժամանակը</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="user-location">
+                            Տեղադրությունը որոշվում է...
+                        </h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm font-semibold capitalize" id="user-date">
+                            -- -- ----
+                        </p>
+                    </div>
+
+                    <!-- Giant Glowing Digital Clock -->
+                    <div class="bg-slate-100/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800/90 rounded-2xl px-8 py-6 text-center shadow-inner min-w-[280px]">
+                        <div class="text-4xl sm:text-6xl font-black tracking-widest text-slate-900 dark:text-white font-mono drop-shadow-sm" id="user-clock">
+                            00:00:00
+                        </div>
+                        <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-3 flex items-center justify-center gap-2" id="user-timezone-offset">
+                            <i class="fa-regular fa-clock text-sky-500"></i>
+                            <span>GMT --:--</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Search Bar & Controls -->
+            <section class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-96">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Փնտրել երկիր կամ քաղաք..." 
+                        class="w-full pl-11 pr-11 py-3.5 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all text-slate-800 dark:text-slate-100 shadow-sm backdrop-blur-md"
+                    >
+                    <button 
+                        id="clear-search"
+                        class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Dynamic Counter Stats -->
+                <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 border-slate-200 dark:border-slate-800 pt-3 sm:pt-0">
+                    <span>Ցուցադրված է: <strong id="visible-count" class="text-sky-600 dark:text-sky-400 font-extrabold">0</strong></span>
+                    <span class="h-3 w-px bg-slate-300 dark:bg-slate-800"></span>
+                    <span>Ընդամենը: <strong id="total-count" class="text-slate-800 dark:text-slate-200 font-extrabold">0</strong></span>
+                </div>
+            </section>
+
+            <!-- Grid Display for World Cards -->
+            <section>
+                <div id="clock-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards are dynamically rendered here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="no-results" class="hidden flex-col items-center justify-center py-20 text-center space-y-4">
+                    <div class="w-20 h-20 rounded-3xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-600 text-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">Ոչինչ չի գտնվել</h3>
+                    <p class="text-xs text-slate-500 max-w-xs">Փորձեք որոնել այլ երկրի կամ քաղաքի անունով:</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-slate-200 dark:border-slate-900 bg-white/50 dark:bg-slate-950/50 backdrop-blur-md py-6 mt-12 text-center text-xs text-slate-500">
+            <div class="max-w-7xl mx-auto px-4">
+                <p>© 2026 Աշխարհի Ժամացույց. Բոլոր իրավունքները պաշտպանված են:</p>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Preset locations with ISO country codes for SVG flags
+        const locationsData = [
+            { country: "Հայաստան", city: "Երևան", code: "am", timezone: "Asia/Yerevan" },
+            { country: "Վրաստան", city: "Թբիլիսի", code: "ge", timezone: "Asia/Tbilisi" },
+            { country: "Ռուսաստան", city: "Մոսկվա", code: "ru", timezone: "Europe/Moscow" },
+            { country: "Ֆրանսիա", city: "Փարիզ", code: "fr", timezone: "Europe/Paris" },
+            { country: "Մեծ Բրիտանիա", city: "Լոնդոն", code: "gb", timezone: "Europe/London" },
+            { country: "Գերմանիա", city: "Բեռլին", code: "de", timezone: "Europe/Berlin" },
+            { country: "Իտալիա", city: "Հռոմ", code: "it", timezone: "Europe/Rome" },
+            { country: "Իսպանիա", city: "Մադրիդ", code: "es", timezone: "Europe/Madrid" },
+            { country: "Հունաստան", city: "Աթենք", code: "gr", timezone: "Europe/Athens" },
+            { country: "ԱՄՆ", city: "Նյու Յորք", code: "us", timezone: "America/New_York" },
+            { country: "ԱՄՆ", city: "Լոս Անջելես", code: "us", timezone: "America/Los_Angeles" },
+            { country: "ԱՄՆ", city: "Չիկագո", code: "us", timezone: "America/Chicago" },
+            { country: "Կանադա", city: "Տորոնտո", code: "ca", timezone: "America/Toronto" },
+            { country: "Ճապոնիա", city: "Տոկիո", code: "jp", timezone: "Asia/Tokyo" },
+            { country: "Չինաստան", city: "Պեկին", code: "cn", timezone: "Asia/Shanghai" },
+            { country: "Հարավային Կորեա", city: "Սեուլ", code: "kr", timezone: "Asia/Seoul" },
+            { country: "ԱՄԷ", city: "Դուբայ", code: "ae", timezone: "Asia/Dubai" },
+            { country: "Հնդկաստան", city: "Նյու Դելի", code: "in", timezone: "Asia/Kolkata" },
+            { country: "Եգիպտոս", city: "Կահիրե", code: "eg", timezone: "Africa/Cairo" },
+            { country: "Ավստրալիա", city: "Սիդնեյ", code: "au", timezone: "Australia/Sydney" },
+            { country: "Նոր Զելանդիա", city: "Օքլենդ", code: "nz", timezone: "Pacific/Auckland" },
+            { country: "Բրազիլիա", city: "Սան Պաուլու", code: "br", timezone: "America/Sao_Paulo" },
+            { country: "Արգենտինա", city: "Բուենոս Այրես", code: "ar", timezone: "America/Argentina/Buenos_Aires" },
+            { country: "Հարավային Աֆրիկա", city: "Քեյփթաուն", code: "za", timezone: "Africa/Johannesburg" }
+        ];
+
+        // State variables
+        let searchQuery = "";
+        
+        // DOM Elements
+        const themeToggleBtn = document.getElementById("theme-toggle");
+        const themeIcon = document.getElementById("theme-icon");
+        const gridElement = document.getElementById("clock-grid");
+        const noResultsElement = document.getElementById("no-results");
+        const searchInput = document.getElementById("search-input");
+        const clearSearchBtn = document.getElementById("clear-search");
+        const visibleCountEl = document.getElementById("visible-count");
+        const totalCountEl = document.getElementById("total-count");
+
+        totalCountEl.innerText = locationsData.length;
+
+        /**
+         * Theme Toggle Logic
+         */
+        function initTheme() {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "light") {
+                document.documentElement.classList.remove("dark");
+                themeIcon.className = "fa-solid fa-sun text-amber-500 text-lg";
+            } else {
+                document.documentElement.classList.add("dark");
+                themeIcon.className = "fa-solid fa-moon text-sky-400 text-lg";
+            }
+        }
+
+        themeToggleBtn.addEventListener("click", () => {
+            if (document.documentElement.classList.contains("dark")) {
+                document.documentElement.classList.remove("dark");
+                localStorage.setItem("theme", "light");
+                themeIcon.className = "fa-solid fa-sun text-amber-500 text-lg";
+            } else {
+                document.documentElement.classList.add("dark");
+                localStorage.setItem("theme", "dark");
+                themeIcon.className = "fa-solid fa-moon text-sky-400 text-lg";
+            }
+        });
+
+        /**
+         * Initialize User Local Details
+         */
+        function initLocalClock() {
+            try {
+                const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Տեղական";
+                document.getElementById("user-location").innerText = `Ձեր Գոտին: ${userTz}`;
+            } catch (e) {
+                document.getElementById("user-location").innerText = "Տեղական Ժամանակ";
+            }
+        }
+
+        /**
+         * Calculate exact minute difference relative to local timezone
+         */
+        function getTimeDifferenceMinutes(now, timeZone) {
+            try {
+                const targetDate = new Date(now.toLocaleString('en-US', { timeZone: timeZone }));
+                const localDate = new Date(now.toLocaleString('en-US'));
+                const diffMs = targetDate - localDate;
+                return Math.round(diffMs / 60000);
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        /**
+         * Format difference into clear Armenian label
+         */
+        function formatDiffString(diffMinutes) {
+            if (diffMinutes === 0) {
+                return { text: "Նույն ժամն է", status: "same" };
+            }
+
+            const isAhead = diffMinutes > 0;
+            const absMinutes = Math.abs(diffMinutes);
+            const hours = Math.floor(absMinutes / 60);
+            const mins = absMinutes % 60;
+
+            let timeParts = [];
+            if (hours > 0) timeParts.push(`${hours} ժ`);
+            if (mins > 0) timeParts.push(`${mins} ր`);
+
+            const formattedTime = timeParts.join(" ");
+
+            if (isAhead) {
+                return { text: `+${formattedTime} առաջ`, status: "ahead" };
+            } else {
+                return { text: `-${formattedTime} հետ`, status: "behind" };
+            }
+        }
+
+        /**
+         * Render & Update Clocks
+         */
+        function updateAllClocks() {
+            const now = new Date();
+
+            // 1. Update Hero User Clock
+            document.getElementById("user-clock").innerText = now.toLocaleTimeString("hy-AM");
+            document.getElementById("user-date").innerText = now.toLocaleDateString("hy-AM", {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Local GMT Offset
+            const tzOffsetMinutes = -now.getTimezoneOffset();
+            const offsetSign = tzOffsetMinutes >= 0 ? "+" : "-";
+            const offsetHours = String(Math.floor(Math.abs(tzOffsetMinutes) / 60)).padStart(2, '0');
+            const offsetMins = String(Math.abs(tzOffsetMinutes) % 60).padStart(2, '0');
+            document.getElementById("user-timezone-offset").querySelector('span').innerText = `GMT ${offsetSign}${offsetHours}:${offsetMins}`;
+
+            // 2. Filter Locations
+            const filteredLocations = locationsData.filter(loc => {
+                const query = searchQuery.toLowerCase().trim();
+                return loc.country.toLowerCase().includes(query) || loc.city.toLowerCase().includes(query);
+            });
+
+            visibleCountEl.innerText = filteredLocations.length;
+
+            if (filteredLocations.length === 0) {
+                gridElement.innerHTML = "";
+                noResultsElement.classList.remove("hidden");
+                noResultsElement.classList.add("flex");
+                return;
+            } else {
+                noResultsElement.classList.add("hidden");
+                noResultsElement.classList.remove("flex");
+            }
+
+            // Render Clock Cards
+            gridElement.innerHTML = filteredLocations.map(loc => {
+                let timeStr = "--:--:--";
+                let dateStr = "";
+                
+                try {
+                    timeStr = now.toLocaleTimeString("hy-AM", { timeZone: loc.timezone, hour12: false });
+                    dateStr = now.toLocaleDateString("hy-AM", { 
+                        timeZone: loc.timezone, 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    });
+                } catch (e) {
+                    timeStr = "Սխալ";
+                }
+
+                const diffMinutes = getTimeDifferenceMinutes(now, loc.timezone);
+                const diffInfo = formatDiffString(diffMinutes);
+
+                // Styling badges for Light & Dark mode
+                let badgeStyle = "";
+                if (diffInfo.status === "ahead") {
+                    badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+                } else if (diffInfo.status === "behind") {
+                    badgeStyle = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30";
+                } else {
+                    badgeStyle = "bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700/60";
+                }
+
+                return `
+                    <div class="group bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 rounded-3xl p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between backdrop-blur-md">
+                        <div>
+                            <!-- Header: Country Name & Flag Icon -->
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <span class="text-base font-extrabold text-slate-900 dark:text-slate-100 group-hover:text-sky-500 transition-colors">
+                                    ${loc.country}
+                                </span>
+                                <span class="fi fi-${loc.code} flag-icon-custom"></span>
+                            </div>
+
+                            <!-- City Name -->
+                            <div class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-city text-slate-400 dark:text-slate-500 text-[10px]"></i>
+                                <span>${loc.city}</span>
+                            </div>
+
+                            <!-- Digital Time -->
+                            <div class="text-4xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-slate-100 mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                                ${timeStr}
+                            </div>
+
+                            <!-- Local Date -->
+                            <div class="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                ${dateStr}
+                            </div>
+                        </div>
+
+                        <!-- Footer Badge -->
+                        <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">Տարբերություն</span>
+                            <span class="px-3.5 py-1 rounded-full text-xs font-bold border ${badgeStyle} shadow-sm">
+                                ${diffInfo.text}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // Search Handlers
+        searchInput.addEventListener("input", (e) => {
+            searchQuery = e.target.value;
+            if (searchQuery.length > 0) {
+                clearSearchBtn.classList.remove("hidden");
+            } else {
+                clearSearchBtn.classList.add("hidden");
+            }
+            updateAllClocks();
+        });
+
+        clearSearchBtn.addEventListener("click", () => {
+            searchInput.value = "";
+            searchQuery = "";
+            clearSearchBtn.classList.add("hidden");
+            updateAllClocks();
+        });
+
+        // App Initialization
+        window.onload = function() {
+            initTheme();
+            initLocalClock();
+            updateAllClocks();
+            setInterval(updateAllClocks, 1000);
+        };
+    </script>
+</body>
+</html>
